@@ -4,6 +4,16 @@ import type { AppConfig } from './types.js';
 
 let config: AppConfig;
 
+function parseBoolean(value: unknown): boolean | undefined {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (['true', '1', 'yes', 'on'].includes(normalized)) return true;
+        if (['false', '0', 'no', 'off'].includes(normalized)) return false;
+    }
+    return undefined;
+}
+
 export function getConfig(): AppConfig {
     if (config) return config;
 
@@ -12,6 +22,7 @@ export function getConfig(): AppConfig {
         port: 3010,
         timeout: 120,
         cursorModel: 'anthropic/claude-sonnet-4.6',
+        identityProbeIntercept: false,
         fingerprint: {
             userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
         },
@@ -26,6 +37,8 @@ export function getConfig(): AppConfig {
             if (yaml.timeout) config.timeout = yaml.timeout;
             if (yaml.proxy) config.proxy = yaml.proxy;
             if (yaml.cursor_model) config.cursorModel = yaml.cursor_model;
+            const identityProbeIntercept = parseBoolean(yaml.identity_probe_intercept);
+            if (identityProbeIntercept !== undefined) config.identityProbeIntercept = identityProbeIntercept;
             if (yaml.fingerprint) {
                 if (yaml.fingerprint.user_agent) config.fingerprint.userAgent = yaml.fingerprint.user_agent;
             }
@@ -48,6 +61,8 @@ export function getConfig(): AppConfig {
     if (process.env.TIMEOUT) config.timeout = parseInt(process.env.TIMEOUT);
     if (process.env.PROXY) config.proxy = process.env.PROXY;
     if (process.env.CURSOR_MODEL) config.cursorModel = process.env.CURSOR_MODEL;
+    const identityProbeIntercept = parseBoolean(process.env.IDENTITY_PROBE_INTERCEPT);
+    if (identityProbeIntercept !== undefined) config.identityProbeIntercept = identityProbeIntercept;
 
     // 从 base64 FP 环境变量解析指纹
     if (process.env.FP) {

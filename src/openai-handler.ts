@@ -30,7 +30,7 @@ import { getConfig } from './config.js';
 import {
     isRefusal,
     sanitizeResponse,
-    isIdentityProbe,
+    shouldInterceptIdentityProbe,
     isToolCapabilityQuestion,
     buildRetryRequest,
     CLAUDE_IDENTITY_RESPONSE,
@@ -253,7 +253,7 @@ export async function handleOpenAIChatCompletions(req: Request, res: Response): 
         // 注意：图片预处理已移入 convertToCursorRequest → preprocessImages() 统一处理
 
         // Step 1.6: 身份探针拦截（复用 Anthropic handler 的逻辑）
-        if (isIdentityProbe(anthropicReq)) {
+        if (shouldInterceptIdentityProbe(anthropicReq)) {
             console.log(`[OpenAI] 拦截到身份探针，返回模拟响应`);
             const mockText = "I am Claude, an advanced AI programming assistant created by Anthropic. I am ready to help you write code, debug, and answer your technical questions. Please let me know what we should work on!";
             if (body.stream) {

@@ -35,6 +35,8 @@ COPY --from=builder --chown=cursor:nodejs /app/dist ./dist
 
 # 拷贝默认配置文件（可通过 volume 挂载覆盖）
 COPY --chown=cursor:nodejs config.yaml ./config.yaml
+COPY --chown=cursor:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod 755 ./docker-entrypoint.sh
 
 # 切换到非 root 用户
 USER cursor
@@ -42,5 +44,9 @@ USER cursor
 # 声明对外暴露的端口
 EXPOSE 3010
 
+# 容器级健康检查（供 Docker / Compose 探活）
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "const port=process.env.PORT||3010;const timeoutMs=Number(process.env.HEALTHCHECK_TIMEOUT_MS||5000);fetch('http://127.0.0.1:'+port+'/health',{signal:AbortSignal.timeout(timeoutMs)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
 # 启动服务
-CMD ["npm", "start"]
+CMD ["./docker-entrypoint.sh"]

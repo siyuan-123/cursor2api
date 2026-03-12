@@ -104,6 +104,7 @@ export interface AppConfig {
     timeout: number;
     proxy?: string;
     cursorModel: string;
+    identityProbeIntercept: boolean;
     vision?: {
         enabled: boolean;
         mode: 'ocr' | 'api';

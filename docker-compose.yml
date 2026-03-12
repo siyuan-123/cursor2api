@@ -6,6 +6,14 @@ services:
     image: cursor2api:latest
     container_name: cursor2api
     restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    healthcheck:
+      test: ["CMD", "node", "-e", "const port=process.env.PORT||3010;const timeoutMs=Number(process.env.HEALTHCHECK_TIMEOUT_MS||5000);fetch('http://127.0.0.1:'+port+'/health',{signal:AbortSignal.timeout(timeoutMs)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     ports:
       - "3010:3010"
     volumes:
@@ -15,6 +23,9 @@ services:
       - NODE_ENV=production
       - PORT=3010
       - TIMEOUT=120
+      - HEALTHCHECK_INTERVAL=30
+      - HEALTHCHECK_START_PERIOD=20
+      - HEALTHCHECK_TIMEOUT_MS=5000
       # ⚠️ 部署到海外机器无需代理，如果在国内云，取消注释并填入你的本机 http/socks 代理
       # - PROXY=http://host.docker.internal:7890
 

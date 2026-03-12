@@ -210,6 +210,10 @@ export function isIdentityProbe(body: AnthropicRequest): boolean {
     return IDENTITY_PROBE_PATTERNS.some(p => p.test(text));
 }
 
+export function shouldInterceptIdentityProbe(body: AnthropicRequest): boolean {
+    return getConfig().identityProbeIntercept && isIdentityProbe(body);
+}
+
 // ==================== 响应内容清洗 ====================
 
 // Claude 身份回复模板（拒绝后的降级回复）
@@ -387,7 +391,7 @@ export async function handleMessages(req: Request, res: Response): Promise<void>
 
     try {
         // 注意：图片预处理已移入 convertToCursorRequest → preprocessImages() 统一处理
-        if (isIdentityProbe(body)) {
+        if (shouldInterceptIdentityProbe(body)) {
             console.log(`[Handler] 拦截到身份探针，返回模拟响应以规避风控`);
             if (body.stream) {
                 return await handleMockIdentityStream(res, body);
